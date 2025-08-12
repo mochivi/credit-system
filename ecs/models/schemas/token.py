@@ -10,4 +10,4 @@ class TokenData(BaseModel):
 # We reply back with the token + expiry details
 class TokenResponse(BaseModel):
     access_token: str
-    expires_in: int
+    expires_seconds: int

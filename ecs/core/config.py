@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # Auth
     JWT_SECRET_KEY: str = ""
-    JWT_EXPIRES_MINUTES: timedelta = timedelta(minutes=60)
+    JWT_EXPIRES_SECONDS: int = 3600
     JWT_ALGORITHM: str = ""
 
     # Database

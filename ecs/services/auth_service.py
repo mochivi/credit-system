@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import HTTPException, status
 
@@ -18,7 +18,7 @@ class AuthService:
             if client.client_id == client_id and client_secret == client.client_secret:
                 token_data = TokenData(
                     sub=client.client_id, 
-                    exp=datetime.now(timezone.utc) + settings.JWT_EXPIRES_IN
+                    exp=datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_EXPIRES_SECONDS)
                 )
 
                 return create_access_token(token_data.model_dump())

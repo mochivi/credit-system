@@ -16,7 +16,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ALGORITHM: ${JWT_ALG}
-      JWT_EXPIRES_MINUTES: ${JWT_EXPIRES_MINUTES:-60}
+      JWT_EXPIRES_SECONDS: ${JWT_EXPIRES_SECONDS:-60}
     command: ["uvicorn", "ecs.app:app", "--host", "0.0.0.0", "--port", "${APP_PORT}"]
     ports:
       - "8000:${APP_PORT}"

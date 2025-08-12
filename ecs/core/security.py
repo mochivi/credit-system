@@ -14,7 +14,7 @@ def create_access_token(data: dict) -> TokenResponse:
 
     return TokenResponse(
         access_token=encoded_jwt,
-        expires_in=settings.JWT_EXPIRES_IN.seconds
+        expires_seconds=settings.JWT_EXPIRES_SECONDS
     )
 
 def verify_access_token(access_token: str) -> TokenData:
