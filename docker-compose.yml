@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ecs-app:latest
+    container_name: ecs-api
+    env_file:
+      - .env
+    environment:
+      DB_URL: ${DB_URL}
+      REDIS_URL: ${REDIS_URL}
+      APP_PORT: ${APP_PORT:-8000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALG}
+      JWT_EXPIRES_MINUTES: ${JWT_EXPIRES_MINUTES:-60}
+    command: ["uvicorn", "ecs.app:app", "--host", "0.0.0.0", "--port", "${APP_PORT}"]
+    ports:
+      - "8000:${APP_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    image: ecs-app:latest
+    container_name: ecs-worker
+    env_file:
+      - .env
+    environment:
+      DB_URL: ${DB_URL}
+      REDIS_URL: ${REDIS_URL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    command: ["rq", "worker", "--url", "${REDIS_URL}", "ecs:offers"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: ecs-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.0-alpine
+    container_name: ecs-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

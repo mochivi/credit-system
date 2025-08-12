@@ -8,12 +8,13 @@ class Settings(BaseSettings):
     TITLE: str = "Empathic Credit System API"
     
     # Auth
-    JWT_SECRET_KEY: str = "644383a7231214b5cc072ccac0a678d1"
-    JWT_EXPIRES_IN: timedelta = timedelta(seconds=3600)
-    JWT_ALGORITHM: str = "HS256"
+    JWT_SECRET_KEY: str = ""
+    JWT_EXPIRES_MINUTES: timedelta = timedelta(minutes=60)
+    JWT_ALGORITHM: str = ""
 
     # Database
     DB_URL: str = ""
+    REDIS_URL: str = ""
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
