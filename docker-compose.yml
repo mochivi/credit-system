@@ -1,11 +1,8 @@
-version: "3.9"
-
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ecs-app:latest
     container_name: ecs-api
     env_file:
       - .env
@@ -15,7 +12,7 @@ services:
       APP_PORT: ${APP_PORT:-8000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       JWT_SECRET: ${JWT_SECRET}
-      JWT_ALGORITHM: ${JWT_ALG}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
       JWT_EXPIRES_SECONDS: ${JWT_EXPIRES_SECONDS:-60}
     command: ["uvicorn", "ecs.app:app", "--host", "0.0.0.0", "--port", "${APP_PORT}"]
     ports:
@@ -28,7 +25,9 @@ services:
     restart: unless-stopped
 
   worker:
-    image: ecs-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ecs-worker
     env_file:
       - .env
@@ -36,7 +35,8 @@ services:
       DB_URL: ${DB_URL}
       REDIS_URL: ${REDIS_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    command: ["rq", "worker", "--url", "${REDIS_URL}", "ecs:offers"]
+    entrypoint: ["rq"]
+    command: ["worker", "--url", "${REDIS_URL}", "ecs:offers"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,10 +56,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   redis:
