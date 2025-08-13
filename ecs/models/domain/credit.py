@@ -159,8 +159,8 @@ class CreditAccount(Base):
     
     # Indexes
     __table_args__ = (
-        Index("ix_credit_accounts_user_id", "user_id"),
-        Index("ix_credit_accounts_updated_at", "updated_at"),
+        Index("ix_credit_accounts_user_id", "user_id"), # Fast lookup of a user’s account.
+        Index("ix_credit_accounts_updated_at", "updated_at"), # Identify recently changed accounts for reconciliation/jobs.
     )
 
     def __repr__(self) -> str:

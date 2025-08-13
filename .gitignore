@@ -9,6 +9,7 @@ wheels/
 # Virtual environments
 .venv
 THOUGHT-PROCESS.md
+DOMAIN-MODEL.md
 *.env
 
 plan.md

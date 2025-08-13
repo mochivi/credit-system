@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, DateTime, Float, Index, ForeignKey
+from sqlalchemy import String, DateTime, Float, Index, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,7 +48,7 @@ class EmotionalEvent(Base):
     captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        server_default="now()",
+        server_default=func.now(),
         nullable=False
     )
     
@@ -57,9 +57,9 @@ class EmotionalEvent(Base):
     
     # Indexes for efficient queries
     __table_args__ = (
-        Index("ix_emotional_events_user_received", "user_id", "received_at"),
-        Index("ix_emotional_events_captured_at", "captured_at"),
-        Index("ix_emotional_events_emotion_primary", "emotion_primary"),
+        Index("ix_emotional_events_user_received", "user_id", "received_at"), # Efficient user‑scoped timelines and pagination by ingest time.
+        Index("ix_emotional_events_captured_at", "captured_at"), # Range filters and backfills by device time.
+        Index("ix_emotional_events_emotion_primary", "emotion_primary"), # Fast filtering/grouping by emotion class for analytics.
     )
 
     def __repr__(self) -> str:
