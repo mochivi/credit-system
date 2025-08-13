@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
+import structlog
 
 from ecs.models.schemas.token import TokenResponse
 from ecs.api.dependencies import AuthServiceDep
@@ -20,6 +21,8 @@ def login_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     auth_service: AuthServiceDep
 ) -> TokenResponse:
+    logger = structlog.get_logger()
+    logger.info("login request")
 
     from fastapi import HTTPException
     if not form_data.username or not form_data.password:

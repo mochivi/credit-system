@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,6 +7,8 @@ class Settings(BaseSettings):
     
     # Application settings
     TITLE: str = "Empathic Credit System API"
+
+    LOG_LEVEL: str = "info"
     
     # Auth
     JWT_SECRET_KEY: str = ""
