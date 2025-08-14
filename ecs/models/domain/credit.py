@@ -100,7 +100,7 @@ class CreditOffer(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="credit_offers")
-    risk_assessment: Mapped["RiskAssessment"] = relationship("RiskAssessment", back_populates="credit_offers")
+    risk_assessment: Mapped["RiskAssessment"] = relationship("RiskAssessment", back_populates="credit_offer")
     
     # Indexes
     __table_args__ = (

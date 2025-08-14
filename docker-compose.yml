@@ -27,7 +27,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: ecs-worker
     env_file:
       - .env
@@ -35,8 +35,6 @@ services:
       DB_URL: ${DB_URL}
       REDIS_URL: ${REDIS_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    entrypoint: ["rq"]
-    command: ["worker", "--url", "${REDIS_URL}", "ecs:offers"]
     depends_on:
       postgres:
         condition: service_healthy

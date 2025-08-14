@@ -1,4 +1,4 @@
-.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current migrate-history db-up db-down
+.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current run down seed-dev migrate-history db-up db-down
 
 # Default target
 help:
@@ -8,20 +8,23 @@ help:
 	@echo "  make migrate-downgrade DB_URL=\"your_db_url\"        - Rollback one migration"
 	@echo "  make migrate-current DB_URL=\"your_db_url\"          - Show current migration version"
 	@echo "  make migrate-history DB_URL=\"your_db_url\"          - Show migration history"
-	@echo "  make db-up            - Start database services"
-	@echo "  make db-down          - Stop database services"
+	@echo "  make db-up                                           - Start database services; run migrations manually"
+	@echo "  make db-down                                         - Stop database services"
+	@echo "  make seed-dev DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\" - Seed database for testing"
+	@echo "  make run                                             - Run application"
+	@echo "  make down                                            - Shutdown application"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make migrate-generate MIGRATION_NAME=\"add user table\""
-	@echo "  make migrate-upgrade DB_URL=\"postgresql+psycopg://user:pass@localhost:5432/db\""
+	@echo "  make migrate-upgrade DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\""
 
 # Start database services
 db-up:
-	docker-compose up -d postgres redis
+	docker compose up -d postgres redis
 
 # Stop database services
 db-down:
-	docker-compose down
+	docker compose down
 
 # Generate a new migration
 migrate-generate:
@@ -53,5 +56,18 @@ migrate-history:
 	@echo "Using DB_URL: $(DB_URL)"
 	DB_URL=$(DB_URL) alembic history
 
+run:
+	@echo "Starting application..."
+	docker compose up --build
+
+down:
+	@echo "Downing application"
+	docker compose down
+
 # Convenience target to generate and apply migrations
 migrate: migrate-generate migrate-upgrade
+
+# Seed deterministic dev/test data via script
+seed-dev:
+	@echo "Seeding dev data via script"
+	DB_URL=$(DB_URL) SEED_DEV_DATA=1 python scripts/seed_dev.py --yes

@@ -33,3 +33,9 @@ def verify_access_token(access_token: str) -> TokenData:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="something went wrong")
 
     return token_data
+
+def verify_client_access_token(access_token: str) -> TokenData:
+    token_data = verify_access_token(access_token)
+    if not token_data.sub.startswith("svc:"):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not authorized")
+    return token_data

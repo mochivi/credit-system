@@ -1,18 +1,5 @@
-from abc import ABC, abstractmethod
+from ecs.repositories.interfaces.emotion import IEmotionalEventsRepository
 
-class BaseUserRepository[T](ABC):
-    @abstractmethod
-    def get(self, id: int) -> T:
-        ...
-
-    @abstractmethod
-    def create(self, item: T) -> T:
-        ...    
-
-    @abstractmethod
-    def update(self, item: T) -> T:
-        ...
-    
-    @abstractmethod
-    def delete(self, id: int) -> None:
-        ...
+__all__ = [
+    "IEmotionalEventsRepository"
+]

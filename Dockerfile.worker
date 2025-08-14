@@ -19,5 +19,5 @@ RUN python -m pip install -U pip setuptools wheel \
 # Copy project files
 COPY . /app
 
-# Default command can be overridden by compose
-CMD ["uvicorn", "ecs.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command for worker (can be overridden by compose)
+CMD ["rq", "worker", "--url", "redis://redis:6379", "ecs:offers"]

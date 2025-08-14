@@ -20,19 +20,20 @@ class RequestLogMiddleware(BaseHTTPMiddleware):
             user_agent=request.headers.get("user-agent", ""),
             client_ip=request.client.host if request.client else "",
         )
+        
         start = time.perf_counter()
         try:
             response: Response = await call_next(request)
-        except Exception as exc:
+        except Exception:
             duration_ms = int((time.perf_counter() - start) * 1000)
-            logger.exception("request_unhandled_exception", duration_ms=duration_ms)
+            logger.exception("Unhandled exception", duration_ms=duration_ms)
             raise
-        else:
-            duration_ms = int((time.perf_counter() - start) * 1000)
-            logger.info(
-                "request_completed",
-                status_code=response.status_code,
-                duration_ms=duration_ms,
-            )
-            response.headers["X-Request-ID"] = req_id
-            return response
+        
+        duration_ms = int((time.perf_counter() - start) * 1000)
+        logger.info(
+            "Request completed",
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+        )
+        response.headers["X-Request-ID"] = req_id
+        return response

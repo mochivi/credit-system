@@ -27,6 +27,7 @@ class User(Base):
     # Identity and contact
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(), nullable=False)
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
