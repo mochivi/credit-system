@@ -35,7 +35,7 @@ router = APIRouter(tags=["Token"])
     summary="Authenticate",
     response_model=TokenResponse
 )
-def login_access_token(
+async def login_access_token(
     form_data: Annotated[OAuth2PasswordOrClientCredentialsRequestForm, Depends()],
     auth_service: AuthServiceDep
 ) -> TokenResponse:
@@ -48,15 +48,16 @@ def login_access_token(
             raise BadRequestError(f"Username and password are required for user authentication.")
         bind_contextvars(principal=form_data.username)
         user_login = UserLogin(email=form_data.username, password=form_data.password)
-        token = auth_service.authenticate_user(user_login)
+        token = await auth_service.authenticate_user(user_login)
         logger.debug("User authenticated")
         return token
     elif form_data.grant_type == "client_credentials":
-        if form_data.client_id and form_data.client_secret:
-            bind_contextvars(principal=form_data.client_id)
-            client_login = Client(client_id=form_data.client_id, client_secret=form_data.client_secret)
-            return auth_service.authenticate_client(client_login)
-        else:
+        if not form_data.client_id and form_data.client_secret:
             raise BadRequestError("Client credentials are required for client authentication")
+        bind_contextvars(principal=form_data.client_id)
+        client_login = Client(client_id=form_data.client_id, client_secret=form_data.client_secret)
+        token = await auth_service.authenticate_client(client_login)
+        logger.debug("Client authenticated")
+        return token
 
     raise BadRequestError(f"Invalid request fields")

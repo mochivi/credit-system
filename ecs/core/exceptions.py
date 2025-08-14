@@ -1,5 +1,6 @@
 import structlog
 import traceback
+import re
 from typing import Any, Callable, TypeVar, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
@@ -11,6 +12,7 @@ from ecs.core.config import settings
 if TYPE_CHECKING:
     from ecs.repositories import BaseDomainError
     from ecs.services import BaseServiceError
+    from ecs.api import BaseHandlerError
 
 # Type variable for error types
 T = TypeVar('T', bound='BaseError')
@@ -85,7 +87,13 @@ class BaseError(Exception, ABC):
     
     def _get_error_title(self) -> str:
         """Human-readable error title"""
-        return self.__class__.__name__.replace('Error', '').replace('_', ' ').title()
+        name = self.__class__.__name__
+        name = re.sub(r"(Error|Exception)$", "", name)
+        name = name.replace('_', ' ')
+        name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name)
+        name = re.sub(r"\s+", " ", name).strip()
+        words = [w if w.isupper() else w.capitalize() for w in name.split(" ")]
+        return " ".join(words)
     
     @abstractmethod
     def _add_subclass_fields(self, result: dict[str, Any]) -> None:
@@ -93,7 +101,7 @@ class BaseError(Exception, ABC):
         ...
 
 # Uncaught exceptions are handled here
-async def global_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+async def global_error_handler(_: Request, exc: Exception) -> JSONResponse:
     logger = structlog.get_logger()
     
     # Always log the full error with traceback for debugging
@@ -158,6 +166,10 @@ async def service_error_handler(request: Request, exc: "BaseServiceError") -> JS
     return await application_error_handler(
         "Service", _get_status_code_for_service_exception, request, exc)
 
+async def handler_error_handler(request: Request, exc: "BaseHandlerError") -> JSONResponse:
+    return await application_error_handler(
+        "Handler", _get_status_code_for_handler_exception, request, exc)
+
 def _get_status_code_for_domain_exception(exc: "BaseDomainError") -> int:
     """Map domain exception types to HTTP status codes"""
     from ecs.repositories import NotFoundError
@@ -168,10 +180,17 @@ def _get_status_code_for_domain_exception(exc: "BaseDomainError") -> int:
         return status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def _get_status_code_for_service_exception(exc: "BaseServiceError") -> int:
-    """Map domain exception types to HTTP status codes"""
+    """Map service exception types to HTTP status codes"""
     from ecs.services import BusinessLogicError
 
     if isinstance(exc, BusinessLogicError):
         return status.HTTP_400_BAD_REQUEST
+    else:
+        return status.HTTP_500_INTERNAL_SERVER_ERROR
+
+def _get_status_code_for_handler_exception(exc: "BaseHandlerError") -> int:
+    """Map handler exception types to HTTP status codes"""
+    if exc.status_code:
+        return exc.status_code
     else:
         return status.HTTP_500_INTERNAL_SERVER_ERROR

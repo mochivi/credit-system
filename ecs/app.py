@@ -8,9 +8,11 @@ from fastapi.routing import APIRoute
 from ecs.core.config import settings
 from ecs.core.logging import configure_logging
 from ecs.core.db import SessionLocal, init_db
-from ecs.core.exceptions import global_exception_handler
-from ecs.api import api_router
-from ecs.api.middleware import RequestLogMiddleware
+from ecs.core.exceptions import global_error_handler, domain_error_handler, service_error_handler, handler_error_handler
+from ecs.repositories.exceptions import BaseDomainError
+from ecs.services.exceptions import BaseServiceError
+from ecs.api.exceptions import BaseHandlerError
+from ecs.api import api_router, RequestLogMiddleware
 
 def generate_custom_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
@@ -23,7 +25,7 @@ def setup_app(app: FastAPI):
     app.add_middleware(RequestLogMiddleware)
 
     # Global exception handler
-    app.add_exception_handler(Exception, global_exception_handler)
+    app.add_exception_handler(Exception, global_error_handler)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -41,6 +43,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 setup_app(app)
+
+# Register exception handlers
+app.add_exception_handler(BaseDomainError, domain_error_handler) # type: ignore
+app.add_exception_handler(BaseServiceError, service_error_handler) # type: ignore
+app.add_exception_handler(BaseHandlerError, handler_error_handler) # type: ignore
+app.add_exception_handler(Exception, global_error_handler)
 
 if __name__ == "__main__":
     import uvicorn

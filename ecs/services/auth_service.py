@@ -19,7 +19,7 @@ USERS = {
 }
 
 class AuthService:
-    def authenticate_user(self, user: UserLogin):
+    async def authenticate_user(self, user: UserLogin):
         for user_email, user_password in USERS.items():
             if user.email == user_email and user.password == user_password:
                 token_data = TokenData(
@@ -31,7 +31,7 @@ class AuthService:
 
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="invalid credentials")
     
-    def authenticate_client(self, client: Client) -> TokenResponse:
+    async def authenticate_client(self, client: Client) -> TokenResponse:
         for client_id, client_secret in CLIENTS.items():
             if client.client_id == client_id and client_secret == client.client_secret:
                 token_data = TokenData(
