@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 import structlog
 
 from ecs.models.schemas.emotion import EmotionalEvent
-from ecs.api.dependencies import CurrentPrincipalDep, EmotionalEventsServiceDep
+from ecs.api.dependencies import CurrentClientPrincipalDep, EmotionalEventsServiceDep
 
 router = APIRouter(prefix="/emotions", tags=["Emotions"])
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/emotions", tags=["Emotions"])
 )
 async def ingest(
     events: list[EmotionalEvent],
-    _: CurrentPrincipalDep,
+    _: CurrentClientPrincipalDep,
     emotional_events_service: EmotionalEventsServiceDep
 ) -> None:
     logger = structlog.get_logger()
