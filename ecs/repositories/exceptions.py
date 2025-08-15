@@ -4,8 +4,18 @@ from typing import Any, override
 from ecs.core.exceptions import BaseError
 
 class BaseDomainError(BaseError):
-    """Base exception class for all domain errors"""
+    """Base error class for all domain errors"""
     pass
+
+
+# For the current moment, this can be used as a generic database error
+class DatabaseError(BaseError):
+    """Base error class for all database operational errors"""
+    pass
+
+    @override
+    def _add_subclass_fields(self, result: dict[str, Any]) -> None:
+        pass
 
 # Generic errors
 
@@ -14,8 +24,8 @@ class NotFoundError(BaseDomainError):
     
     def __init__(
         self, 
-        resource_type: str | None, 
-        resource_id: uuid.UUID | None,
+        resource_type: str | None = None, 
+        resource_id: uuid.UUID | None = None,
         message: str | None = None,
         extra_context: dict[str, Any] | None = None,
         **kwargs

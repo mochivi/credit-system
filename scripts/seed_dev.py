@@ -5,6 +5,13 @@ import argparse
 from decimal import Decimal
 
 from sqlalchemy import create_engine, text
+from passlib.context import CryptContext
+
+# Create password hashing context (same as in security.py)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 # Deterministic IDs for seed data
 USER_1_ID = "11111111-1111-1111-1111-111111111111"
@@ -24,6 +31,8 @@ OFFER_1_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc"  # proposed
 
 ACC_1_ID = "dddddddd-dddd-dddd-dddd-dddddddddddd"  # active credit account for USER_1
 
+CLIENT_1_ID = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"  # API client
+
 
 def should_seed(cli_yes: bool) -> bool:
     if cli_yes:
@@ -35,6 +44,23 @@ def seed(db_url: str) -> None:
     engine = create_engine(db_url)
 
     with engine.begin() as conn:
+        # API Client
+        conn.execute(
+            text(
+                """
+                INSERT INTO clients (id, client_id, client_secret, name)
+                VALUES (:id, :client_id, :client_secret, :name)
+                ON CONFLICT (id) DO NOTHING
+                """
+            ),
+            {
+                "id": CLIENT_1_ID, 
+                "client_id": "ecs-ingest",
+                "client_secret": hash_password("oz`]:u`RYz#ZN];"), 
+                "name": "ECS Ingestion Service"
+            },
+        )
+
         # Users (password column is required by current schema)
         conn.execute(
             text(
@@ -44,7 +70,7 @@ def seed(db_url: str) -> None:
                 ON CONFLICT (id) DO NOTHING
                 """
             ),
-            {"id": USER_1_ID, "full_name": "Alice Merchant", "email": "alice@example.com", "password": "password-hash"},
+            {"id": USER_1_ID, "full_name": "Alice Merchant", "email": "alice@example.com", "password": hash_password("password123")},
         )
         conn.execute(
             text(
@@ -54,7 +80,7 @@ def seed(db_url: str) -> None:
                 ON CONFLICT (id) DO NOTHING
                 """
             ),
-            {"id": USER_2_ID, "full_name": "Bob Retailer", "email": "bob@example.com", "password": "password-hash"},
+            {"id": USER_2_ID, "full_name": "Bob Retailer", "email": "bob@example.com", "password": hash_password("password123")},
         )
 
         # Emotional events for USER_1

@@ -1,13 +1,8 @@
-from typing import AsyncGenerator
-
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 from ecs.core.config import settings
 from ecs.core.logging import configure_logging
-from ecs.core.db import SessionLocal, init_db
 from ecs.core.exceptions import global_error_handler, domain_error_handler, service_error_handler, handler_error_handler
 from ecs.repositories.exceptions import BaseDomainError
 from ecs.services.exceptions import BaseServiceError
@@ -27,20 +22,10 @@ def setup_app(app: FastAPI):
     # Global exception handler
     app.add_exception_handler(Exception, global_error_handler)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    async with SessionLocal() as session:
-        try:
-            await init_db(session)
-        except:
-            await session.close()
-    yield
-
 configure_logging()
 
 app = FastAPI(
     title=settings.TITLE,
-    lifespan=lifespan,
 )
 setup_app(app)
 

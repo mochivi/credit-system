@@ -1,9 +1,12 @@
 import jwt
+from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 
 from ecs.core.config import settings
 from ecs.models.schemas.token import TokenData, TokenResponse
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_access_token(data: dict) -> TokenResponse:    
     encoded_jwt = jwt.encode(
@@ -34,8 +37,8 @@ def verify_access_token(access_token: str) -> TokenData:
 
     return token_data
 
-def verify_client_access_token(access_token: str) -> TokenData:
-    token_data = verify_access_token(access_token)
-    if not token_data.sub.startswith("svc:"):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not authorized")
-    return token_data
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(password: str, password_hash: str) -> bool:
+    return pwd_context.verify(password, password_hash)

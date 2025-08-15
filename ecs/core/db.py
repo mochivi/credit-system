@@ -14,7 +14,5 @@ async def get_async_db_session()  -> AsyncGenerator[AsyncSession, Any]:
             yield session
         finally:
             await session.close()
-async def init_db(session: AsyncSession) -> None:
-    pass
 
 AsyncSessionDep: TypeAlias = Annotated[AsyncSession, Depends(get_async_db_session)]

@@ -1,4 +1,8 @@
-from ecs.repositories.implementations.emotion_repository import EmotionalEventsRepository
+from ecs.repositories.implementations import (
+    EmotionalEventsRepository,
+    UserRepository,
+    ClientRepository
+)
 from ecs.repositories.exceptions import (
     BaseDomainError,
     NotFoundError, 
@@ -7,6 +11,8 @@ from ecs.repositories.exceptions import (
 
 __all__ = [
     "EmotionalEventsRepository",
+    "UserRepository",
+    "ClientRepository",
 
     "BaseDomainError",
     "NotFoundError",

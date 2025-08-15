@@ -48,7 +48,8 @@ class BaseError(Exception, ABC):
                 from structlog.contextvars import get_contextvars
                 contextvars_data = get_contextvars()
                 if contextvars_data:
-                    context.update(contextvars_data)
+                    # Convert UUIDs to strings for JSON serialization
+                    context.update(self._serialize_contextvars(contextvars_data))
             except Exception:
                 pass
         
@@ -57,6 +58,17 @@ class BaseError(Exception, ABC):
             context.update(explicit_context)
             
         return context
+    
+    def _serialize_contextvars(self, contextvars_data: dict[str, Any]) -> dict[str, Any]:
+        """Convert contextvars data to JSON-serializable format"""
+        serialized = {}
+        for key, value in contextvars_data.items():
+            if hasattr(value, '__str__'):
+                # Convert UUIDs and other objects to strings
+                serialized[key] = str(value)
+            else:
+                serialized[key] = value
+        return serialized
     
     def _get_default_error_code(self) -> str:
         """Get default error code based on class name"""
@@ -181,10 +193,14 @@ def _get_status_code_for_domain_exception(exc: "BaseDomainError") -> int:
 
 def _get_status_code_for_service_exception(exc: "BaseServiceError") -> int:
     """Map service exception types to HTTP status codes"""
-    from ecs.services import BusinessLogicError
+    from ecs.services import BusinessLogicError, UnauthorizedError, ForbiddenError
 
     if isinstance(exc, BusinessLogicError):
         return status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, UnauthorizedError):
+        return status.HTTP_401_UNAUTHORIZED
+    elif isinstance(exc, ForbiddenError):
+        return status.HTTP_403_FORBIDDEN
     else:
         return status.HTTP_500_INTERNAL_SERVER_ERROR
 

@@ -27,3 +27,10 @@ class UnauthorizedError(BaseServiceError):
     @override
     def _add_subclass_fields(self, result: dict[str, Any]) -> None:
         pass
+
+class ForbiddenError(BaseServiceError):
+    """Forbidden action error"""
+
+    @override
+    def _add_subclass_fields(self, result: dict[str, Any]) -> None:
+        pass

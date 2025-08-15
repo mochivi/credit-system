@@ -6,7 +6,7 @@ from sqlalchemy import String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from . import Base
+from ecs.models.domain import Base
 
 if TYPE_CHECKING:
     from .emotion import EmotionalEvent

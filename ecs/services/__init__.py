@@ -4,7 +4,8 @@ from ecs.services.emotion_service import EmotionService
 from ecs.services.exceptions import (
     BaseServiceError,
     BusinessLogicError,
-    UnauthorizedError
+    UnauthorizedError,
+    ForbiddenError
 )
 
 
@@ -15,4 +16,5 @@ __all__ = [
     "BaseServiceError",
     "BusinessLogicError",
     "UnauthorizedError",
+    "ForbiddenError",
 ]

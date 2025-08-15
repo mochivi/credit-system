@@ -1,9 +1,7 @@
 from typing import Annotated
 
 import structlog
-from structlog.contextvars import bind_contextvars
 from fastapi import APIRouter, Depends, status, Form
-
 
 from ecs.api.dependencies import AuthServiceDep
 from ecs.api.exceptions import BadRequestError
@@ -46,17 +44,19 @@ async def login_access_token(
     if form_data.grant_type == "password":
         if not form_data.username or not form_data.password:
             raise BadRequestError(f"Username and password are required for user authentication.")
-        bind_contextvars(principal=form_data.username)
+        
         user_login = UserLogin(email=form_data.username, password=form_data.password)
         token = await auth_service.authenticate_user(user_login)
+        
         logger.debug("User authenticated")
         return token
     elif form_data.grant_type == "client_credentials":
         if not form_data.client_id and form_data.client_secret:
             raise BadRequestError("Client credentials are required for client authentication")
-        bind_contextvars(principal=form_data.client_id)
+        
         client_login = Client(client_id=form_data.client_id, client_secret=form_data.client_secret)
         token = await auth_service.authenticate_client(client_login)
+        
         logger.debug("Client authenticated")
         return token
 

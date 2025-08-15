@@ -6,9 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ecs.models.domain import EmotionalEvent
 
 class IEmotionalEventsRepository(ABC):
-    """Base abstract class for EmotionalEventsRepository.
-    Ensures protocol is followed
-    """
+    """Base abstract class for the emotional events repository"""
 
     @abstractmethod
     async def ingest(self, events: Sequence[EmotionalEvent], db: AsyncSession):
