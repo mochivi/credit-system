@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     DB_URL: str = ""
     REDIS_URL: str = ""
 
+    # Feature engineering configuration
+    feature_engineering_transactions_period_days: int = 30
+    feature_engineering_transactions_limit: int = 1000
+    feature_engineering_emotional_events_period_days: int = 7
+    feature_engineering_emotional_events_limit: int = 50
+
     @property
     def is_development(self) -> bool:
         return self.ENVIRONMENT.lower() in ["development", "dev"]

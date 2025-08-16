@@ -4,8 +4,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, DateTime, Numeric, Index, ForeignKey, Text, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import String, DateTime, Numeric, Index, ForeignKey, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ecs.models.domain import Base
@@ -34,13 +34,14 @@ class RiskAssessment(Base):
     # ML model risk assesment result
     risk_score: Mapped[float] = mapped_column(Numeric(precision=5, scale=4), nullable=False)  # 0.0000 to 1.0000
     
-    # Decision outcome
-    decision: Mapped[str] = mapped_column(String(20), nullable=False)  # approved, declined, ...
-    
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         server_default=func.now(),
+        nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False
     )
     
@@ -52,11 +53,10 @@ class RiskAssessment(Base):
     __table_args__ = (
         Index("ix_risk_assessments_user_created", "user_id", "created_at"), # Quick search for user risk assessments
         Index("ix_risk_assessments_risk_score", "risk_score"), # Allows for efficient WHERE queries based on risk_score, data analysis could benefit from this
-        Index("ix_risk_assessments_decision", "decision"), # Decision index allows for efficient grouping of orders by decision
     )
 
     def __repr__(self) -> str:
-        return f"<RiskAssessment(id={self.id}, user_id={self.user_id}, risk_score={self.risk_score}, decision='{self.decision}')>"
+        return f"<RiskAssessment(id={self.id}, user_id={self.user_id}, risk_score={self.risk_score})>"
 
 
 class CreditOffer(Base):

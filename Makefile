@@ -71,3 +71,7 @@ migrate: migrate-generate migrate-upgrade
 seed-dev:
 	@echo "Seeding dev data via script"
 	DB_URL=$(DB_URL) SEED_DEV_DATA=1 python scripts/seed_dev.py --yes
+
+clean-dev:
+	@echo "Seeding dev data via script"
+	DB_URL=$(DB_URL) python scripts/clean_dev.py --yes

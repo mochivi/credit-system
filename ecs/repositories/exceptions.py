@@ -27,13 +27,12 @@ class NotFoundError(BaseDomainError):
         resource_type: str | None = None, 
         resource_id: uuid.UUID | None = None,
         message: str | None = None,
-        extra_context: dict[str, Any] | None = None,
         **kwargs
     ) -> None:
         self.resource_type = resource_type
         self.resource_id = resource_id
         self.message = message or f"{resource_type} with id {resource_id} not found"
-        super().__init__(self.message, extra_context=extra_context, **kwargs)
+        super().__init__(self.message, **kwargs)
     
     @override
     def _add_subclass_fields(self, result: dict[str, Any]) -> None:

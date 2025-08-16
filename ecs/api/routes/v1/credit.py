@@ -1,9 +1,15 @@
 import uuid
+from typing import Any
 
+import structlog
+from structlog.contextvars import bind_contextvars
 from fastapi import APIRouter, status
 
-router = APIRouter(prefix="/credit", tags=["Credit"])
+from ecs.api.dependencies import CurrentUserPrincipalDep, CreditServiceDep
+from ecs.models.schemas import CreditOfferResponse
+from ecs.models.domain import CreditOffer
 
+router = APIRouter(prefix="/credit", tags=["Credit"])
 
 """
 Credit Limit API:
@@ -17,9 +23,22 @@ The endpoint should accept relevant parameters and return the calculated credit 
     path="/apply",
     status_code=status.HTTP_200_OK,
     summary="Apply for credit line",
+    response_model=CreditOfferResponse
 )
-def apply():
-    pass
+async def apply(
+    user_token: CurrentUserPrincipalDep,
+    credit_service: CreditServiceDep
+) -> Any:
+    logger = structlog.get_logger()
+    logger.info("Received credit line apply request")
+
+    user_id: uuid.UUID = uuid.UUID(user_token.sub)
+    bind_contextvars(user_id=user_id)
+
+    credit_offer: CreditOffer = await credit_service.apply_for_credit_line(user_id)
+
+    logger.info("Returning credit offer", offer_status=credit_offer.status)
+    return credit_offer
 
 """
 Triggers async job for applying credit limit and user notification

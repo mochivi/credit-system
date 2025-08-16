@@ -10,7 +10,7 @@ class PrincipalType(StrEnum):
 
 # The information encoded into the token
 class TokenData(BaseModel):
-    sub: str  # principal id, e.g., svc:ingest, key:abc123, usr:uuid
+    sub: str  # principal id, an UUID converted to str
     exp: datetime
     typ: PrincipalType  # principal type: client or user
 

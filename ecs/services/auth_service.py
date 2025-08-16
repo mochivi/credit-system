@@ -1,6 +1,5 @@
 from datetime import datetime, timezone, timedelta
 
-from fastapi import HTTPException, status
 import structlog
 
 from ecs.core.config import settings
@@ -12,16 +11,6 @@ from ecs.models.schemas.token import TokenData, TokenResponse, PrincipalType
 from ecs.models.schemas.client import Client
 from ecs.models.schemas.user import UserLogin
 from ecs.services.exceptions import UnauthorizedError
-
-# Mocked allowed clients
-CLIENTS = {
-    "svc:ingest" : "e?<[;Mn.84f$h}l"
-}
-
-# Mocked users (for MVP)
-USERS = {
-    "user@example.com": "Passw0rd!"
-}
 
 class AuthService:
 
@@ -50,7 +39,7 @@ class AuthService:
 
         logger.debug("Creating access token")
         token_data = TokenData(
-            sub=db_user.email,
+            sub=str(db_user.id),
             exp=datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_EXPIRES_SECONDS),
             typ=PrincipalType.user,
         )
@@ -71,7 +60,7 @@ class AuthService:
 
         logger.debug("Creating access token")
         token_data = TokenData(
-            sub=db_client.client_id,
+            sub=str(db_client.id),
             exp=datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_EXPIRES_SECONDS),
             typ=PrincipalType.client,
         )

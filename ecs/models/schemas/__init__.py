@@ -1,28 +1,26 @@
-# User schemas
-from .user import UserLogin
-
-# Token schemas
-from .token import TokenData, TokenResponse, PrincipalType
-
-# Emotion schemas
-from .emotion import EmotionalEvent, PrimaryEmotion
-
-# Client schemas
-from .client import Client
+from ecs.models.schemas.user import UserLogin
+from ecs.models.schemas.token import TokenData, TokenResponse, PrincipalType
+from ecs.models.schemas.emotion import EmotionalEvent, PrimaryEmotion
+from ecs.models.schemas.client import Client
+from ecs.models.schemas.features import Features
+from ecs.models.schemas.credit import (
+    CreditOfferResponse, RiskAssessment, CreditOffer, RiskCategory, CreditOfferStatus, CreditType,
+    CreditOfferResponse
+)
 
 __all__ = [
-    # User
     "UserLogin",
-    
-    # Token
     "TokenData",
     "TokenResponse", 
     "PrincipalType",
-    
-    # Emotion
     "EmotionalEvent",
     "PrimaryEmotion",
-    
-    # Client
     "Client",
+    "Features",
+    "RiskAssessment",
+    "CreditOffer",
+    "CreditOfferResponse",
+    "RiskCategory", 
+    "CreditOfferStatus", 
+    "CreditType"
 ]
