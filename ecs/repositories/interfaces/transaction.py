@@ -1,11 +1,12 @@
 import uuid
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING
 from datetime import datetime
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ecs.models.domain import Transaction
+if TYPE_CHECKING:
+    from ecs.models.domain import DBTransaction
 
 class ITransactionRepository(ABC):
     """Base abstract class for the transaction repository"""
@@ -17,5 +18,5 @@ class ITransactionRepository(ABC):
         db: AsyncSession, 
         since: datetime | None = None, 
         limit: int | None = None
-    ) -> Sequence[Transaction]:
+    ) -> Sequence["DBTransaction"]:
         ...

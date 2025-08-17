@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ecs.repositories.exceptions import DatabaseError
 from ecs.repositories.interfaces import ITransactionRepository
-from ecs.models.domain import Transaction
+from ecs.models.domain import DBTransaction
 
 class TransactionRepository(ITransactionRepository):
 
@@ -20,17 +20,17 @@ class TransactionRepository(ITransactionRepository):
         db: AsyncSession,
         since: datetime | None = None,
         limit: int | None = None
-    ) -> Sequence[Transaction]:
+    ) -> Sequence[DBTransaction]:
         logger = structlog.get_logger()
         logger.debug("Retrieving recent transactions", since=since.isoformat() if since else "ever")
 
         # Build query
-        query = select(Transaction).where(Transaction.user_id == user_id)
+        query = select(DBTransaction).where(DBTransaction.user_id == user_id)
         if since:
-            query = query.where(Transaction.occurred_at > since)
+            query = query.where(DBTransaction.occurred_at > since)
         if limit:
             query = query.limit(limit)
-        query = query.order_by(Transaction.occurred_at.desc())
+        query = query.order_by(DBTransaction.occurred_at.desc())
 
         try:
             result = await db.execute(query)

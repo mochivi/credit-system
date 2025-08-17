@@ -11,10 +11,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ecs.models.domain import Base
 
 if TYPE_CHECKING:
-    from .user import User
+    from ecs.models.domain.user import DBUser
 
 
-class RiskAssessment(Base):
+class DBRiskAssessment(Base):
     __tablename__ = "risk_assessments"
 
     # Primary key
@@ -46,8 +46,8 @@ class RiskAssessment(Base):
     )
     
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="risk_assessments")
-    credit_offer: Mapped["CreditOffer | None"] = relationship("CreditOffer", back_populates="risk_assessment")
+    user: Mapped["DBUser"] = relationship("DBUser", back_populates="risk_assessments")
+    credit_offer: Mapped["DBCreditOffer | None"] = relationship("DBCreditOffer", back_populates="risk_assessment")
     
     # Indexes
     __table_args__ = (
@@ -59,7 +59,7 @@ class RiskAssessment(Base):
         return f"<RiskAssessment(id={self.id}, user_id={self.user_id}, risk_score={self.risk_score})>"
 
 
-class CreditOffer(Base):
+class DBCreditOffer(Base):
     __tablename__ = "credit_offers"
 
     # Primary key
@@ -99,8 +99,8 @@ class CreditOffer(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="credit_offers")
-    risk_assessment: Mapped["RiskAssessment"] = relationship("RiskAssessment", back_populates="credit_offer")
+    user: Mapped["DBUser"] = relationship("DBUser", back_populates="credit_offers")
+    risk_assessment: Mapped["DBRiskAssessment"] = relationship("DBRiskAssessment", back_populates="credit_offer")
     
     # Indexes
     __table_args__ = (
@@ -113,7 +113,7 @@ class CreditOffer(Base):
         return f"<CreditOffer(id={self.id}, user_id={self.user_id}, credit_limit={self.credit_limit}, status='{self.status}')>"
 
 
-class CreditAccount(Base):
+class DBCreditAccount(Base):
     __tablename__ = "credit_accounts"
 
     # Primary key
@@ -155,7 +155,7 @@ class CreditAccount(Base):
     )
     
     # Relationship
-    user: Mapped["User"] = relationship("User", back_populates="credit_account")
+    user: Mapped["DBUser"] = relationship("DBUser", back_populates="credit_account")
     
     # Indexes
     __table_args__ = (

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from ecs.models.domain import Base
 
-class Client(Base):
+class DBClient(Base):
     __tablename__ = "clients"
 
     id: Mapped[uuid.UUID] = mapped_column(

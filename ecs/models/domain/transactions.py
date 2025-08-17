@@ -10,10 +10,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ecs.models.domain import Base
 
 if TYPE_CHECKING:
-    from .user import User
+    from ecs.models.domain.user import DBUser
 
 
-class Transaction(Base):
+class DBTransaction(Base):
     __tablename__ = "transactions"
 
     # Primary key
@@ -38,7 +38,7 @@ class Transaction(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     
     # Relationship
-    user: Mapped["User"] = relationship("User", back_populates="transactions")
+    user: Mapped["DBUser"] = relationship("DBUser", back_populates="transactions")
     
     # Indexes for efficient queries
     __table_args__ = (

@@ -5,19 +5,19 @@ class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models in the domain."""
     pass
 
-from ecs.models.domain.user import User
-from ecs.models.domain.emotion import EmotionalEvent
-from ecs.models.domain.transactions import Transaction
-from ecs.models.domain.credit import RiskAssessment, CreditOffer, CreditAccount
-from ecs.models.domain.client import Client
+from ecs.models.domain.user import DBUser
+from ecs.models.domain.emotion import DBEmotionalEvent
+from ecs.models.domain.transactions import DBTransaction
+from ecs.models.domain.credit import DBRiskAssessment, DBCreditOffer, DBCreditAccount
+from ecs.models.domain.client import DBClient
 
 __all__ = [
     "Base",
-    "User",
-    "Client",
-    "EmotionalEvent", 
-    "Transaction",
-    "RiskAssessment",
-    "CreditOffer", 
-    "CreditAccount",
+    "DBUser",
+    "DBClient",
+    "DBEmotionalEvent", 
+    "DBTransaction",
+    "DBRiskAssessment",
+    "DBCreditOffer", 
+    "DBCreditAccount",
 ]

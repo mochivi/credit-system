@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from ecs.core.config import settings
 
 engine: AsyncEngine = create_async_engine(settings.DB_URL)
-SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 async def get_async_db_session()  -> AsyncGenerator[AsyncSession, Any]:
     async with SessionLocal() as session:

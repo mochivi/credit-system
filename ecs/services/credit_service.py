@@ -1,12 +1,9 @@
-from ecs.models.domain.credit import RiskAssessment
-
-
 from datetime import datetime, timedelta
 
 import uuid
-from typing import TYPE_CHECKING
 
 import structlog
+from structlog.contextvars import bind_contextvars
 
 from ecs.services.dependencies import (
     EmotionalEventsRepositoryDep, UserRepositoryDep, CreditRepositoryDep,
@@ -14,8 +11,8 @@ from ecs.services.dependencies import (
 )
 from ecs.core.db import AsyncSessionDep
 from ecs.models.schemas import Features, CreditOffer, RiskCategory, CreditType, CreditOfferStatus, RiskAssessment
-from ecs.models.domain import CreditOffer as DBCreditOffer, RiskAssessment as DBRiskAssessment
-from ecs.services.exceptions import HasActiveCreditOfferError
+from ecs.models.domain import DBCreditOffer, DBRiskAssessment
+from ecs.services.exceptions import ActiveCreditOfferExistsError
 
 class CreditService:
     def __init__(
@@ -42,37 +39,41 @@ class CreditService:
         # If user already has an active credit offer, return that
         active_offer = await self.credit_repository.get_active_credit_offer(user_id, self.db)
         if active_offer is not None:
-            raise HasActiveCreditOfferError(credit_offer=active_offer, message="User already has an active credit offer")
+            bind_contextvars(offer_id=active_offer.id)
+            logger.debug("User has an active credit offer")
+            raise ActiveCreditOfferExistsError(credit_offer=active_offer, message="User already has an active credit offer")
 
-        async with self.db.begin():
-            # Get raw data from database
-            logger.debug("Retrieving data for credit line analysis")
-            transactions = await self.transaction_repository.get_recent_transactions(
-                user_id,
-                self.db,
-                since=self.feature_engineering_service.transactions_since,
-                limit=self.feature_engineering_service.transaction_limit
-            )
-            emotional_events = await self.emotional_events_repo.get_recent_emotional_events(
-                user_id,
-                self.db,
-                self.feature_engineering_service.emotional_events_since,
-                self.feature_engineering_service.emotional_events_limit
-            )
+        # Get raw data from database
+        logger.debug("Retrieving data for credit line analysis")
+        transactions = await self.transaction_repository.get_recent_transactions(
+            user_id,
+            self.db,
+            since=self.feature_engineering_service.transactions_since,
+            limit=self.feature_engineering_service.transaction_limit
+        )
+        emotional_events = await self.emotional_events_repo.get_recent_emotional_events(
+            user_id,
+            self.db,
+            self.feature_engineering_service.emotional_events_since,
+            self.feature_engineering_service.emotional_events_limit
+        )
+
+        # Perform feature engineering
+        logger.debug("Creating features from user data")
+        features: Features = await self.feature_engineering_service.create_features(
+            transactions, emotional_events
+        )
         
+        try:
             # Check if there's a non expired risk assessment
-            db_risk_assessment: DBRiskAssessment | None = await self.credit_repository.get_valid_risk_assessment(user_id, self.db)
-            
-            # Perform feature engineering
-            features: Features = await self.feature_engineering_service.create_features(
-                transactions, emotional_events
-            )
-
-            if db_risk_assessment is None:   
+            db_risk_assessment: DBRiskAssessment | None = await self.credit_repository.get_valid_risk_assessment(user_id, self.db)   
+            if db_risk_assessment is None:
                 # Submit request to credit ML model
+                logger.debug("Sending request to credit model service")
                 risk_assessment: RiskAssessment = await self.credit_model_service.predict_credit_risk(features)
 
                 # Create risk assessment in the db
+                logger.debug("Creating risk assessment")
                 db_risk_assessment = DBRiskAssessment(
                     user_id=user_id,
                     expires_at=datetime.now()+timedelta(days=15),
@@ -80,20 +81,29 @@ class CreditService:
                 )
                 await self.credit_repository.create_risk_assessment(db_risk_assessment, self.db)
             else:
+                logger.debug("Reusing valid previous risk assessment")
                 risk_assessment = RiskAssessment(risk_score=db_risk_assessment.risk_score)
 
+            logger.debug("Calculating credit offer")
             credit_offer: CreditOffer = CreditOfferCalculator().calculate_offer(risk_assessment, features)
 
+            # Create credit offer in the database
+            logger.debug("Creating credit offer")
             db_credit_offer: DBCreditOffer = DBCreditOffer(
                 user_id=user_id,
                 risk_assessment_id=db_risk_assessment.id,
+                expires_at=datetime.now()+timedelta(days=15),
                 **credit_offer.model_dump()
             )
-
-            # Create credit offer in the database
             await self.credit_repository.create_credit_offer(db_credit_offer, self.db)
-
-        return db_credit_offer # Already refreshed
+            
+            print("we got here?")
+            logger.debug("Committing changes")
+            await self.db.commit() # Commit both changes as a unit
+            return db_credit_offer # Already refreshed
+        except Exception:
+            await self.db.rollback()
+            raise
 
 class CreditOfferCalculator:
 

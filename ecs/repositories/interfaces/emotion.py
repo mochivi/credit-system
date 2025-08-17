@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING
 from datetime import datetime
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ecs.models.domain import EmotionalEvent
+if TYPE_CHECKING:
+    from ecs.models.domain import DBEmotionalEvent
 
 class IEmotionalEventsRepository(ABC):
     """Base abstract class for the emotional events repository"""
 
     @abstractmethod
-    async def ingest(self, events: Sequence[EmotionalEvent], db: AsyncSession) -> None:
+    async def ingest(self, events: Sequence["DBEmotionalEvent"], db: AsyncSession) -> None:
         ...
 
     @abstractmethod
@@ -21,5 +22,5 @@ class IEmotionalEventsRepository(ABC):
         db: AsyncSession,
         since: datetime | None = None,
         limit: int | None = None
-    ) -> Sequence[EmotionalEvent]:
+    ) -> Sequence["DBEmotionalEvent"]:
         ...

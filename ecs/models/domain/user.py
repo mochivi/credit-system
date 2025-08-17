@@ -9,12 +9,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ecs.models.domain import Base
 
 if TYPE_CHECKING:
-    from .emotion import EmotionalEvent
-    from .transactions import Transaction
-    from .credit import RiskAssessment, CreditOffer, CreditAccount
+    from ecs.models.domain.emotion import DBEmotionalEvent
+    from ecs.models.domain.transactions import DBTransaction
+    from ecs.models.domain.credit import DBRiskAssessment, DBCreditOffer, DBCreditAccount
 
 
-class User(Base):
+class DBUser(Base):
     __tablename__ = "users"
 
     # Primary key
@@ -43,32 +43,32 @@ class User(Base):
     )
     
     # Relationships
-    emotional_events: Mapped[list["EmotionalEvent"]] = relationship(
-        "EmotionalEvent", 
+    emotional_events: Mapped[list["DBEmotionalEvent"]] = relationship(
+        "DBEmotionalEvent", 
         back_populates="user",
         cascade="all, delete-orphan"
     )
     
-    transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", 
+    transactions: Mapped[list["DBTransaction"]] = relationship(
+        "DBTransaction", 
         back_populates="user",
         cascade="all, delete-orphan"
     )
     
-    risk_assessments: Mapped[list["RiskAssessment"]] = relationship(
-        "RiskAssessment", 
+    risk_assessments: Mapped[list["DBRiskAssessment"]] = relationship(
+        "DBRiskAssessment", 
         back_populates="user",
         cascade="all, delete-orphan"
     )
     
-    credit_offers: Mapped[list["CreditOffer"]] = relationship(
-        "CreditOffer", 
+    credit_offers: Mapped[list["DBCreditOffer"]] = relationship(
+        "DBCreditOffer", 
         back_populates="user",
         cascade="all, delete-orphan"
     )
     
-    credit_account: Mapped["CreditAccount | None"] = relationship(
-        "CreditAccount", 
+    credit_account: Mapped["DBCreditAccount | None"] = relationship(
+        "DBCreditAccount", 
         back_populates="user",
         uselist=False
     )

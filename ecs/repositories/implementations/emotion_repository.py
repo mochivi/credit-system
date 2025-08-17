@@ -8,13 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from ecs.repositories.interfaces import IEmotionalEventsRepository
-from ecs.models.domain import EmotionalEvent
+from ecs.models.domain import DBEmotionalEvent
 from ecs.repositories.exceptions import DatabaseError, EmotionalEventIngestionError
 
 class EmotionalEventsRepository(IEmotionalEventsRepository):
 
     @override
-    async def ingest(self, events: Sequence[EmotionalEvent], db: AsyncSession):
+    async def ingest(self, events: Sequence[DBEmotionalEvent], db: AsyncSession):
         logger = structlog.get_logger()
         
         logger.debug("Inserting emotional events")
@@ -28,6 +28,7 @@ class EmotionalEventsRepository(IEmotionalEventsRepository):
         except SQLAlchemyError as e:
             raise DatabaseError(f"Database error: {e}", original_error=e)
 
+        await db.flush()
         logger.debug("Successfully inserted emotional events")
 
     @override
@@ -37,17 +38,17 @@ class EmotionalEventsRepository(IEmotionalEventsRepository):
         db: AsyncSession,
         since: datetime | None = None,
         limit: int | None = None
-    ) -> Sequence[EmotionalEvent]:
+    ) -> Sequence[DBEmotionalEvent]:
         logger = structlog.get_logger()
         logger.debug("Retrieving recent emotional events", since=since.isoformat() if since else "ever")
 
         # Build query
-        query = select(EmotionalEvent).where(EmotionalEvent.user_id == user_id)
+        query = select(DBEmotionalEvent).where(DBEmotionalEvent.user_id == user_id)
         if since:
-            query = query.where(EmotionalEvent.captured_at > since)
+            query = query.where(DBEmotionalEvent.captured_at > since)
         if limit:
             query = query.limit(limit)
-        query = query.order_by(EmotionalEvent.captured_at.desc())
+        query = query.order_by(DBEmotionalEvent.captured_at.desc())
 
         try:
             result = await db.execute(query)

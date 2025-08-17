@@ -7,21 +7,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from ecs.repositories.interfaces import IUserRepository
-from ecs.models.domain import User
+from ecs.models.domain import DBUser
 from ecs.repositories.exceptions import DatabaseError, NotFoundError
 
 class UserRepository(IUserRepository):
 
     @override
-    async def get_by_email(self, email: str, db: AsyncSession) -> User:
+    async def get_by_email(self, email: str, db: AsyncSession) -> DBUser:
         logger = structlog.get_logger()
         logger.debug("Getting user from the database by email")
         
         try:
             result = await db.execute(
-                select(User).where(User.email == email)
+                select(DBUser).where(DBUser.email == email)
             )
-            user: User | None = result.scalar_one_or_none()
+            user: DBUser | None = result.scalar_one_or_none()
         except SQLAlchemyError as e:
             raise DatabaseError(f"Database error: {e}", original_error=e)
         

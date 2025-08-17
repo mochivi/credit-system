@@ -11,23 +11,23 @@ from structlog.contextvars import bind_contextvars
 from ecs.models.schemas.credit import CreditOfferStatus
 from ecs.repositories.interfaces import ICreditRepository
 from ecs.repositories.exceptions import DatabaseError, NotFoundError
-from ecs.models.domain import CreditOffer, CreditAccount, RiskAssessment
+from ecs.models.domain import DBCreditOffer, DBCreditAccount, DBRiskAssessment
 
 class CreditRepository(ICreditRepository):
     """Repository for credit-related database operations"""
 
     @override
-    async def get_active_credit_offer(self, user_id: uuid.UUID, db: AsyncSession) -> CreditOffer | None:
+    async def get_active_credit_offer(self, user_id: uuid.UUID, db: AsyncSession) -> DBCreditOffer | None:
         """Check if user has an active credit offer"""
         logger = structlog.get_logger()
         logger.debug("Checking for active credit offer", user_id=user_id)
 
         try:
             # Query for active credit offers (not expired, not accepted/rejected)
-            query = select(CreditOffer).where(
-                CreditOffer.user_id == user_id,
-                CreditOffer.status == CreditOfferStatus.offered,
-                datetime.now() < CreditOffer.expires_at,
+            query = select(DBCreditOffer).where(
+                DBCreditOffer.user_id == user_id,
+                DBCreditOffer.status == CreditOfferStatus.offered,
+                datetime.now() < DBCreditOffer.expires_at,
             ).limit(1)
             
             result = await db.execute(query)
@@ -45,7 +45,7 @@ class CreditRepository(ICreditRepository):
             raise DatabaseError(f"Database error checking active credit offers: {e}", original_error=e)
 
     @override
-    async def create_credit_offer(self, credit_offer: CreditOffer, db: AsyncSession) -> None:
+    async def create_credit_offer(self, credit_offer: DBCreditOffer, db: AsyncSession) -> None:
         """Create a new credit offer"""
         logger = structlog.get_logger()
         logger.debug("Creating credit offer", user_id=credit_offer.user_id)
@@ -62,7 +62,7 @@ class CreditRepository(ICreditRepository):
             raise DatabaseError(f"Database error creating credit offer: {e}", original_error=e)
 
     @override
-    async def create_credit_account(self, credit_account: CreditAccount, db: AsyncSession) -> None:
+    async def create_credit_account(self, credit_account: DBCreditAccount, db: AsyncSession) -> None:
         """Create a new credit account"""
         logger = structlog.get_logger()
         logger.debug("Creating credit account", user_id=credit_account.user_id)
@@ -85,7 +85,7 @@ class CreditRepository(ICreditRepository):
         logger.debug("Updating credit offer status", offer_id=offer_id, status=status)
 
         try:
-            query = select(CreditOffer).where(CreditOffer.id == offer_id)
+            query = select(DBCreditOffer).where(DBCreditOffer.id == offer_id)
             result = await db.execute(query)
             offer = result.scalar_one_or_none()
             
@@ -102,7 +102,7 @@ class CreditRepository(ICreditRepository):
             raise DatabaseError(f"Database error updating credit offer status: {e}", original_error=e)
 
     @override
-    async def create_risk_assessment(self, risk_assessment: RiskAssessment, db: AsyncSession) -> None:
+    async def create_risk_assessment(self, risk_assessment: DBRiskAssessment, db: AsyncSession) -> None:
         """Create a new risk assessment"""
         logger = structlog.get_logger()
         logger.debug("Creating risk assessment", user_id=risk_assessment.user_id)
@@ -119,17 +119,17 @@ class CreditRepository(ICreditRepository):
             raise DatabaseError(f"Database error creating risk assessment: {e}", original_error=e)
 
     @override
-    async def get_valid_risk_assessment(self, user_id: uuid.UUID, db: AsyncSession) -> RiskAssessment | None:
+    async def get_valid_risk_assessment(self, user_id: uuid.UUID, db: AsyncSession) -> DBRiskAssessment | None:
         """Get the most recent valid risk assessment for a user"""
         logger = structlog.get_logger()
         logger.debug("Getting valid risk assessment", user_id=user_id)
 
         try:
             # Query for the most recent risk assessment (within last 30 days)
-            query = select(RiskAssessment).where(
-                RiskAssessment.user_id == user_id,
-                datetime.now() < RiskAssessment.expires_at 
-            ).order_by(RiskAssessment.created_at.desc()).limit(1)
+            query = select(DBRiskAssessment).where(
+                DBRiskAssessment.user_id == user_id,
+                datetime.now() < DBRiskAssessment.expires_at 
+            ).order_by(DBRiskAssessment.created_at.desc()).limit(1)
             
             result = await db.execute(query)
             risk_assessment = result.scalar_one_or_none()

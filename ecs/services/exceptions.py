@@ -3,7 +3,7 @@ from typing import override, Any, TYPE_CHECKING
 from ecs.core.exceptions import BaseError
 
 if TYPE_CHECKING:
-    from ecs.models.domain.credit import CreditOffer
+    from ecs.models.domain.credit import DBCreditOffer
 
 class BaseServiceError(BaseError):
     """Base exception class for all service errors"""
@@ -16,10 +16,10 @@ class BusinessLogicError(BaseServiceError):
     def _add_subclass_fields(self, result: dict[str, Any]) -> None:
         pass
 
-class HasActiveCreditOfferError(BusinessLogicError):
-    """User already has an actite credit offer"""
+class ActiveCreditOfferExistsError(BusinessLogicError):
+    """Active credit offer already exists"""
 
-    def __init__(self, credit_offer: "CreditOffer", message: str, **kwargs) -> None:
+    def __init__(self, credit_offer: "DBCreditOffer", message: str, **kwargs) -> None:
         self.credit_offer = credit_offer
         super().__init__(message, **kwargs)
 

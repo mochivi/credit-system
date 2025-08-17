@@ -7,7 +7,8 @@ from fastapi import APIRouter, status
 
 from ecs.api.dependencies import CurrentUserPrincipalDep, CreditServiceDep
 from ecs.models.schemas import CreditOfferResponse
-from ecs.models.domain import CreditOffer
+from ecs.models.domain import DBCreditOffer
+from ecs.services.exceptions import ActiveCreditOfferExistsError
 
 router = APIRouter(prefix="/credit", tags=["Credit"])
 
@@ -35,7 +36,11 @@ async def apply(
     user_id: uuid.UUID = uuid.UUID(user_token.sub)
     bind_contextvars(user_id=user_id)
 
-    credit_offer: CreditOffer = await credit_service.apply_for_credit_line(user_id)
+    try:
+        credit_offer: DBCreditOffer = await credit_service.apply_for_credit_line(user_id)
+    except ActiveCreditOfferExistsError as e:
+        logger.info("Returning valid credit offer")
+        return e.credit_offer
 
     logger.info("Returning credit offer", offer_status=credit_offer.status)
     return credit_offer

@@ -9,10 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ecs.models.domain import Base
 
 if TYPE_CHECKING:
-    from .user import User
+    from .user import DBUser
 
 
-class EmotionalEvent(Base):
+class DBEmotionalEvent(Base):
     __tablename__ = "emotional_events"
 
     # Primary key
@@ -53,7 +53,7 @@ class EmotionalEvent(Base):
     )
     
     # Relationship
-    user: Mapped["User"] = relationship("User", back_populates="emotional_events")
+    user: Mapped["DBUser"] = relationship("DBUser", back_populates="emotional_events")
     
     # Indexes for efficient queries
     __table_args__ = (
