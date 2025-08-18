@@ -73,5 +73,27 @@ services:
       retries: 10
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:4
+    ports:
+      - "5672:${RABBITMQ_PORT}"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+
+  emotion-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: ecs-emotion-consumer
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   pgdata:

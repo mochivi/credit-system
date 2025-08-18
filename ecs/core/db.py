@@ -12,7 +12,12 @@ from ecs.core.config import settings
 
 # Database setup
 engine: AsyncEngine = create_async_engine(settings.DB_URL)
-SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+SessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
+    bind=engine, 
+    autoflush=False, 
+    autocommit=False, 
+    expire_on_commit=False
+)
 
 # Redis (async) connection pool for general async Redis usage
 redis_pool: ConnectionPool = redis.ConnectionPool.from_url(

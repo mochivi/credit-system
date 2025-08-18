@@ -1,0 +1,1 @@
+from ecs.services.consumers.emotion_consumer import EmotionQueueConsumer

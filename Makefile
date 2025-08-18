@@ -1,4 +1,4 @@
-.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current run down seed-dev migrate-history db-up db-down
+.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current run down seed-dev migrate-history db-up db-down clean-dev produce-emotions
 
 # Default target
 help:
@@ -13,6 +13,8 @@ help:
 	@echo "  make seed-dev DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\" - Seed database for testing"
 	@echo "  make run                                             - Run application"
 	@echo "  make down                                            - Shutdown application"
+	@echo "  make clean-dev DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\" - Clean dev data"
+	@echo "  make produce-emotions RABBITMQ_HOST=\"localhost\" RABBITMQ_USER=\"guest\" RABBITMQ_PASS=\"guest\" - Run emotional events producer"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make migrate-generate MIGRATION_NAME=\"add user table\""
@@ -73,5 +75,20 @@ seed-dev:
 	DB_URL=$(DB_URL) SEED_DEV_DATA=1 python scripts/seed_dev.py --yes
 
 clean-dev:
-	@echo "Seeding dev data via script"
+	@echo "Cleaning dev data via script"
 	DB_URL=$(DB_URL) python scripts/clean_dev.py --yes
+
+# Run the emotional events producer script
+produce-emotions:
+	@echo "Starting emotional events producer..."
+	@if [ -n "$(RABBITMQ_HOST)" ]; then \
+		echo "Using RabbitMQ host: $(RABBITMQ_HOST)"; \
+		RABBITMQ_HOST=$(RABBITMQ_HOST) \
+		RABBITMQ_USER=$(RABBITMQ_USER) \
+		RABBITMQ_PASS=$(RABBITMQ_PASS) \
+		RABBITMQ_PORT=$(RABBITMQ_PORT) \
+		python scripts/produce_emotional_events.py; \
+	else \
+		echo "Using RabbitMQ settings from .env file"; \
+		python scripts/produce_emotional_events.py; \
+	fi

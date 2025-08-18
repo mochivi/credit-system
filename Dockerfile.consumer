@@ -1,0 +1,23 @@
+FROM python:3.13-alpine
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache gcc musl-dev libffi-dev postgresql-dev
+
+# Copy requirements first for better caching
+COPY pyproject.toml ./
+
+# Install Python deps
+RUN python -m pip install -U pip setuptools wheel \
+ && python -m pip install .
+
+# Copy project files
+COPY . /app
+
+# Run the consumer
+CMD ["python", "-m", "ecs.workers.emotion_consumer"]

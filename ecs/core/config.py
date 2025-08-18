@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     DB_URL: str = ""
     REDIS_URL: str = ""
 
+    # RabbitMQ
+    RABBITMQ_USER: str = ""
+    RABBITMQ_PASS: str = ""
+    RABBITMQ_HOST: str = ""
+    RABBITMQ_PORT: str = ""
+
     # Feature engineering configuration
     feature_engineering_transactions_period_days: int = 30
     feature_engineering_transactions_limit: int = 1000
