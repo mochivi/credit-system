@@ -59,7 +59,7 @@ migrate-history:
 
 run-dev:
 	@echo "Starting application in dev mode..."
-	docker compose up -f docker-compose.dev.yml --build
+	docker compose -f docker-compose.dev.yml up  --build
 
 down-dev:
 	@echo "Downing application"
@@ -67,7 +67,7 @@ down-dev:
 
 run-prod:
 	@echo "Starting application with load balancer..."
-	docker compose  -f docker-compose.yml up --build
+	docker compose -f docker-compose.yml up --build
 
 down-prod:
 	@echo "Downing application"
