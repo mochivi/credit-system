@@ -1,24 +1,23 @@
-.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current run down seed-dev migrate-history db-up db-down clean-dev produce-emotions
+.PHONY: help migrate migrate-generate migrate-upgrade migrate-downgrade migrate-current run-dev down-dev run-prod down-prod seed-dev migrate-history db-up db-down clean-dev produce-emotions
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make migrate-generate MIGRATION_NAME=\"description\"  - Generate a new migration from model changes"
+	@echo "  make migrate-generate MIGRATION_NAME=\"description\" - Generate a new migration from model changes"
 	@echo "  make migrate-upgrade DB_URL=\"your_db_url\"          - Apply all pending migrations"
 	@echo "  make migrate-downgrade DB_URL=\"your_db_url\"        - Rollback one migration"
 	@echo "  make migrate-current DB_URL=\"your_db_url\"          - Show current migration version"
 	@echo "  make migrate-history DB_URL=\"your_db_url\"          - Show migration history"
 	@echo "  make db-up                                           - Start database services; run migrations manually"
 	@echo "  make db-down                                         - Stop database services"
-	@echo "  make seed-dev DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\" - Seed database for testing"
-	@echo "  make run                                             - Run application"
-	@echo "  make down                                            - Shutdown application"
-	@echo "  make clean-dev DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\" - Clean dev data"
-	@echo "  make produce-emotions RABBITMQ_HOST=\"localhost\" RABBITMQ_USER=\"guest\" RABBITMQ_PASS=\"guest\" - Run emotional events producer"
+	@echo "  make seed-dev DB_URL=\"<your DB URL>"                - Seed database with test data"
+	@echo "  make run-dev                                         - Run application"
+	@echo "  make down-dev                                        - Shutdown application"
+	@echo "  make run-prod                                        - Run application"
+	@echo "  make down-prod                                       - Shutdown application"
+	@echo "  make clean-dev DB_URL=\"<your DB URL>"               - Clean dev data"
+	@echo "  make produce-emotions                                - Run emotional events producer script"
 	@echo ""
-	@echo "Examples:"
-	@echo "  make migrate-generate MIGRATION_NAME=\"add user table\""
-	@echo "  make migrate-upgrade DB_URL=\"postgresql+psycopg://user:pass@postgres-host:5432/db\""
 
 # Start database services
 db-up:
@@ -58,13 +57,21 @@ migrate-history:
 	@echo "Using DB_URL: $(DB_URL)"
 	DB_URL=$(DB_URL) alembic history
 
-run:
-	@echo "Starting application..."
-	docker compose up --build
+run-dev:
+	@echo "Starting application in dev mode..."
+	docker compose up -f docker-compose.dev.yml --build
 
-down:
+down-dev:
 	@echo "Downing application"
-	docker compose down
+	docker compose  -f docker-compose.dev.yml down
+
+run-prod:
+	@echo "Starting application with load balancer..."
+	docker compose  -f docker-compose.yml up --build
+
+down-prod:
+	@echo "Downing application"
+	docker compose -f docker-compose.yml down
 
 # Convenience target to generate and apply migrations
 migrate: migrate-generate migrate-upgrade
