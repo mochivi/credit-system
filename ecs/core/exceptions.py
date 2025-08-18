@@ -193,16 +193,33 @@ def _get_status_code_for_domain_exception(exc: "BaseDomainError") -> int:
 
 def _get_status_code_for_service_exception(exc: "BaseServiceError") -> int:
     """Map service exception types to HTTP status codes"""
-    from ecs.services import BusinessLogicError, UnauthorizedError, ForbiddenError
+    from ecs.services import BusinessLogicError, UnauthorizedError, ForbiddenError 
 
     if isinstance(exc, BusinessLogicError):
+        from ecs.services import (
+            CreditAccountExistsError, ActiveCreditOfferExistsError, 
+            NoActiveCreditOfferExistsError, ExpiredCreditOfferError
+        )
+        
+        if isinstance(exc, ActiveCreditOfferExistsError):
+            return status.HTTP_409_CONFLICT
+        if isinstance(exc, CreditAccountExistsError):
+            return status.HTTP_409_CONFLICT
+        if isinstance(exc, NoActiveCreditOfferExistsError):
+            return status.HTTP_404_NOT_FOUND
+        if isinstance(exc, ExpiredCreditOfferError):
+            return status.HTTP_422_UNPROCESSABLE_ENTITY
+        
+        # Default behavior for business logic errors, unless overriden
         return status.HTTP_400_BAD_REQUEST
-    elif isinstance(exc, UnauthorizedError):
+    
+    if isinstance(exc, UnauthorizedError):
         return status.HTTP_401_UNAUTHORIZED
-    elif isinstance(exc, ForbiddenError):
+    
+    if isinstance(exc, ForbiddenError):
         return status.HTTP_403_FORBIDDEN
-    else:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR
+    
+    return status.HTTP_500_INTERNAL_SERVER_ERROR
 
 def _get_status_code_for_handler_exception(exc: "BaseHandlerError") -> int:
     """Map handler exception types to HTTP status codes"""

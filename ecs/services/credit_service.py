@@ -6,38 +6,50 @@ import structlog
 from structlog.contextvars import bind_contextvars
 
 from ecs.services.dependencies import (
-    EmotionalEventsRepositoryDep, UserRepositoryDep, CreditRepositoryDep,
+    EmotionalEventsRepositoryDep, CreditRepositoryDep,
     TransactionRepositoryDep, FeatureEngineeringServiceDep, CreditModelServiceDep
 )
-from ecs.core.db import AsyncSessionDep
-from ecs.models.schemas import Features, CreditOffer, RiskCategory, CreditType, CreditOfferStatus, RiskAssessment
+from ecs.core.db import AsyncSessionDep, RQQueueDep
+from ecs.models.schemas import (
+    Features, CreditOffer, RiskCategory, CreditType, CreditOfferStatus, RiskAssessment
+)
 from ecs.models.domain import DBCreditOffer, DBRiskAssessment
-from ecs.services.exceptions import ActiveCreditOfferExistsError
+from ecs.services.exceptions import (
+    ActiveCreditOfferExistsError, CreditAccountExistsError, 
+    NoActiveCreditOfferExistsError, InvalidCreditOfferError
+)
 
 class CreditService:
     def __init__(
         self, 
-        user_repository: UserRepositoryDep,
         credit_repository: CreditRepositoryDep,
         transaction_repository: TransactionRepositoryDep,
         emotional_events_repo: EmotionalEventsRepositoryDep,
         feature_engineering_service: FeatureEngineeringServiceDep,
         credit_model_service: CreditModelServiceDep,
-        session: AsyncSessionDep
+        session: AsyncSessionDep,
+        redis_queue: RQQueueDep
     ) -> None:
         self.db = session
-        self.user_repository = user_repository
         self.credit_repository = credit_repository
         self.transaction_repository = transaction_repository
         self.emotional_events_repo = emotional_events_repo
         self.feature_engineering_service = feature_engineering_service
         self.credit_model_service = credit_model_service
+        self.redis_queue = redis_queue
 
     async def apply_for_credit_line(self, user_id: uuid.UUID) -> DBCreditOffer:
         logger = structlog.get_logger()
 
+        # If user already has an active credit account, we won't allow them to request for another
+        # or more credit
+        # This doesn't reflect the reality of the business, its a choice made for simplificaton purposes
+        active_credit_account = await self.credit_repository.get_credit_account_for_user(user_id, self.db)
+        if active_credit_account is not None:
+            raise CreditAccountExistsError("User already has an active credit account")
+
         # If user already has an active credit offer, return that
-        active_offer = await self.credit_repository.get_active_credit_offer(user_id, self.db)
+        active_offer = await self.credit_repository.get_active_credit_offer_for_user(user_id, self.db)
         if active_offer is not None:
             bind_contextvars(offer_id=active_offer.id)
             logger.debug("User has an active credit offer")
@@ -104,6 +116,41 @@ class CreditService:
         except Exception:
             await self.db.rollback()
             raise
+
+    async def accept_credit_offer(self, offer_id: uuid.UUID,user_id: uuid.UUID) -> str:
+
+        # If user already has an active credit account, we won't allow them to request for another or more credit
+        # This doesn't reflect the reality of the business, its a choice made for simplificaton purposes
+        # We check for this again in case the user tries to accept some other offer somehow
+        active_credit_account = await self.credit_repository.get_credit_account_for_user(user_id, self.db)
+        if active_credit_account is not None:
+            raise CreditAccountExistsError("User already has an active credit account")
+
+        # Query by the user_id, that way, we avoid other users being able to query the database for offer_ids
+        # Safer to query by the user_id by default
+        credit_offer: DBCreditOffer | None = await self.credit_repository.get_active_credit_offer_for_user(user_id, self.db)
+        if credit_offer is None:
+            raise NoActiveCreditOfferExistsError("No active credit offer found")
+
+        # Second layer of defense, validate the provided offer_id matches the retrieved id
+        # Business rule is that there can be only one active credit_offer for each user at the moment
+        # This avoids any coding errors between the offer_id the user wants to accept and the offer_id we retrieved
+        # by querying by the user_id
+        if credit_offer.id != offer_id:
+            raise InvalidCreditOfferError("Provided offer ID does not match the expected ID")
+
+        # Check if credit offer is still valid
+        if credit_offer.expires_at < datetime.now(credit_offer.expires_at.tzinfo):
+            raise InvalidCreditOfferError("Credit offer has expired")
+
+        # Trigger async job to create credit account and then mark the credit offer as accepted
+        _ =  self.redis_queue.enqueue("ecs.workers.jobs.process_credit_acceptance", offer_id=str(offer_id), user_id=str(user_id))
+        
+        # Create an internal tracker for the job, not used as of this implementation
+        # No status checking endpoint requirement.
+        job_id: str = str(uuid.uuid4())
+
+        return job_id
 
 class CreditOfferCalculator:
 

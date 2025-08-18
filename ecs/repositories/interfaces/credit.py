@@ -11,11 +11,15 @@ class ICreditRepository(ABC):
     """Base abstract class for the credit repository"""
 
     @abstractmethod
-    async def get_active_credit_offer(self, user_id: "uuid.UUID", db: "AsyncSession") -> "DBCreditOffer | None":
+    async def get_active_credit_offer_for_user(self, user_id: "uuid.UUID", db: "AsyncSession") -> "DBCreditOffer | None":
         ...
 
     @abstractmethod
     async def create_credit_offer(self, credit_offer: "DBCreditOffer", db: "AsyncSession") -> None:
+        ...
+
+    @abstractmethod
+    async def get_credit_account_for_user(self, user_id: "uuid.UUID", db: "AsyncSession") -> "DBCreditAccount | None":
         ...
 
     @abstractmethod

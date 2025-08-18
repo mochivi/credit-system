@@ -41,3 +41,9 @@ class CreditOffer(BaseModel):
 class CreditOfferResponse(CreditOffer):
     id: uuid.UUID
     user_id: uuid.UUID
+
+class CreditAcceptResponse(BaseModel):
+    id: str
+    offer_id: str
+    status: str
+    message: str

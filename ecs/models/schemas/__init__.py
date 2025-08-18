@@ -5,7 +5,7 @@ from ecs.models.schemas.client import Client
 from ecs.models.schemas.features import Features
 from ecs.models.schemas.credit import (
     CreditOfferResponse, RiskAssessment, CreditOffer, RiskCategory, CreditOfferStatus, CreditType,
-    CreditOfferResponse
+    CreditOfferResponse, CreditAcceptResponse
 )
 
 __all__ = [
@@ -22,5 +22,6 @@ __all__ = [
     "CreditOfferResponse",
     "RiskCategory", 
     "CreditOfferStatus", 
-    "CreditType"
+    "CreditType",
+    "CreditAcceptResponse"
 ]

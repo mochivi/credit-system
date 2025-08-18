@@ -28,6 +28,22 @@ class ActiveCreditOfferExistsError(BusinessLogicError):
         result["credit_offer"] = self.credit_offer
         return super()._add_subclass_fields(result)
 
+class NoActiveCreditOfferExistsError(BusinessLogicError):
+    """No active credit offer exists"""
+    pass
+
+class InvalidCreditOfferError(BusinessLogicError):
+    """User provided offer_id does not match id of current active offer"""
+    pass
+
+class ExpiredCreditOfferError(BusinessLogicError):
+    """User provided offer_id does not match id of current active offer"""
+    pass
+
+class CreditAccountExistsError(BusinessLogicError):
+    """User already has a credit account"""
+    pass
+
 class UnauthorizedError(BaseServiceError):
     """Unauthorized action error"""
 

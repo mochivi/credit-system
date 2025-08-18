@@ -17,10 +17,13 @@ class CreditRepository(ICreditRepository):
     """Repository for credit-related database operations"""
 
     @override
-    async def get_active_credit_offer(self, user_id: uuid.UUID, db: AsyncSession) -> DBCreditOffer | None:
-        """Check if user has an active credit offer"""
+    async def get_active_credit_offer_for_user(self, user_id: uuid.UUID, db: AsyncSession) -> DBCreditOffer | None:
+        """
+        Retrieve an active credit offer for a given user
+        Returns the DBCreditOffer instance if found, else None.
+        """
         logger = structlog.get_logger()
-        logger.debug("Checking for active credit offer", user_id=user_id)
+        logger.debug("Retrieving active credit offer for user")
 
         try:
             # Query for active credit offers (not expired, not accepted/rejected)
@@ -60,6 +63,30 @@ class CreditRepository(ICreditRepository):
             
         except SQLAlchemyError as e:
             raise DatabaseError(f"Database error creating credit offer: {e}", original_error=e)
+
+    @override
+    async def get_credit_account_for_user(self, user_id: uuid.UUID, db: AsyncSession) -> DBCreditAccount | None:
+        """
+        Retrieve the credit account for a given user.
+        Returns the DBCreditAccount instance if found, else None.
+        """
+        logger = structlog.get_logger()
+        logger.debug("Retrieving credit account for user")
+
+        try:
+            query = select(DBCreditAccount).where(DBCreditAccount.user_id == user_id).limit(1)
+            result = await db.execute(query)
+            credit_account = result.scalar_one_or_none()
+
+            if not credit_account:
+                logger.debug("No credit account found for user")
+                return None
+
+            logger.debug("Credit account retrieved", account_id=credit_account.id)
+            return credit_account
+
+        except SQLAlchemyError as e:
+            raise DatabaseError(f"Database error retrieving credit account: {e}", original_error=e)
 
     @override
     async def create_credit_account(self, credit_account: DBCreditAccount, db: AsyncSession) -> None:

@@ -6,7 +6,7 @@ from structlog.contextvars import bind_contextvars
 from fastapi import APIRouter, status
 
 from ecs.api.dependencies import CurrentUserPrincipalDep, CreditServiceDep
-from ecs.models.schemas import CreditOfferResponse
+from ecs.models.schemas import CreditOfferResponse, CreditAcceptResponse
 from ecs.models.domain import DBCreditOffer
 from ecs.services.exceptions import ActiveCreditOfferExistsError
 
@@ -53,5 +53,21 @@ Triggers async job for applying credit limit and user notification
     status_code=status.HTTP_202_ACCEPTED,
     summary="Accept credit line offer",
 )
-def accept(offer_id: uuid.UUID):
-    pass
+async def accept(
+    offer_id: uuid.UUID,
+    user_token: CurrentUserPrincipalDep,
+    credit_service: CreditServiceDep
+) -> CreditAcceptResponse:
+    logger = structlog.get_logger()
+    logger.info("Received credit line apply request")
+
+    user_id: uuid.UUID = uuid.UUID(user_token.sub)
+    bind_contextvars(offer_id=offer_id, user_id=user_id)
+
+    job_id: str = await credit_service.accept_credit_offer(offer_id, user_id)
+    return CreditAcceptResponse(
+        id=job_id,
+        offer_id=str(offer_id),
+        status="processing",
+        message="Credit offer acceptance is being processed"
+    )

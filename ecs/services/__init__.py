@@ -3,7 +3,9 @@ from ecs.services.emotion_service import EmotionService
 from ecs.services.credit_service import CreditService
 
 from ecs.services.exceptions import (
-    BaseServiceError, BusinessLogicError, UnauthorizedError, ForbiddenError
+    BaseServiceError, BusinessLogicError, UnauthorizedError, ForbiddenError, 
+    ActiveCreditOfferExistsError, CreditAccountExistsError, NoActiveCreditOfferExistsError,
+    ExpiredCreditOfferError
 )
 
 __all__ = [
@@ -12,7 +14,15 @@ __all__ = [
     "CreditService",
     
     "BaseServiceError",
+    
     "BusinessLogicError",
+    "ActiveCreditOfferExistsError",
+    "CreditAccountExistsError",
+    "NoActiveCreditOfferExistsError",
+    "ExpiredCreditOfferError",
+    
     "UnauthorizedError",
     "ForbiddenError",
+
+
 ]
