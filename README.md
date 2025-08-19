@@ -53,7 +53,7 @@ The ECS data model centers around these core entities:
 
 ### Authentication
 ```
-POST /token
+POST api/v1/token
 ```
 - Supports two flows:
   - **User Authentication**: `grant_type=password` with `username` and `password`
