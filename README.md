@@ -16,7 +16,7 @@ The ECS architecture is designed around the following components:
 
 2. **Authentication**: JWT-based authentication system supporting both user credentials and client credentials flows.
 
-3. **Data Processing Pipelines**:
+3. **API endpoints | Data ingestion pipeline**:
    - **Synchronous Processing**: Direct database operations for immediate user responses
    - **Asynchronous Processing**: Redis Queue (RQ) for background job processing like credit offer acceptance
    - **Real-time Emotional Data**: RabbitMQ for streaming emotional events from client devices
