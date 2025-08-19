@@ -19,7 +19,7 @@ The ECS architecture is designed around the following components:
 3. **API endpoints | Data ingestion pipeline**:
    - **Synchronous Processing**: Direct database operations for immediate user responses
    - **Asynchronous Processing**: Redis Queue (RQ) for background job processing like credit offer acceptance
-   - **Real-time Emotional Data**: RabbitMQ for streaming emotional events from client devices
+   - **Real-time Emotional Data**: RabbitMQ for streaming emotional events from multiple sources
 
 4. **Workers**:
    - **RQ Worker**: Processes background jobs like credit approval finalization and notifications
@@ -53,7 +53,7 @@ The ECS data model centers around these core entities:
 
 ### Authentication
 ```
-POST api/v1/token
+POST /api/v1/token
 ```
 - Supports two flows:
   - **User Authentication**: `grant_type=password` with `username` and `password`
