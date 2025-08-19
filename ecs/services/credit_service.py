@@ -117,7 +117,7 @@ class CreditService:
             await self.db.rollback()
             raise
 
-    async def accept_credit_offer(self, offer_id: uuid.UUID,user_id: uuid.UUID) -> str:
+    async def accept_credit_offer(self, offer_id: uuid.UUID, user_id: uuid.UUID) -> str:
 
         # If user already has an active credit account, we won't allow them to request for another or more credit
         # This doesn't reflect the reality of the business, its a choice made for simplificaton purposes
@@ -130,6 +130,8 @@ class CreditService:
         # Safer to query by the user_id by default
         credit_offer: DBCreditOffer | None = await self.credit_repository.get_active_credit_offer_for_user(user_id, self.db)
         if credit_offer is None:
+            raise NoActiveCreditOfferExistsError("No active credit offer found")
+        if credit_offer.status == CreditOfferStatus.denied:
             raise NoActiveCreditOfferExistsError("No active credit offer found")
 
         # Second layer of defense, validate the provided offer_id matches the retrieved id
@@ -156,7 +158,7 @@ class CreditOfferCalculator:
 
     def calculate_offer(self, risk_assessment: RiskAssessment, features: Features) -> CreditOffer:
         if risk_assessment.risk_category == RiskCategory.high_risk:
-            return CreditOffer(status=CreditOfferStatus.rejected)
+            return CreditOffer(status=CreditOfferStatus.denied)
 
         # Base credit limit calculation
         base_limit = self._calculate_base_limit(risk_assessment.risk_score)

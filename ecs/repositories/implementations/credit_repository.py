@@ -29,7 +29,7 @@ class CreditRepository(ICreditRepository):
             # Query for active credit offers (not expired, not accepted/rejected)
             query = select(DBCreditOffer).where(
                 DBCreditOffer.user_id == user_id,
-                DBCreditOffer.status == CreditOfferStatus.offered,
+                DBCreditOffer.status.in_([CreditOfferStatus.offered, CreditOfferStatus.denied]),
                 datetime.now() < DBCreditOffer.expires_at,
             ).limit(1)
             

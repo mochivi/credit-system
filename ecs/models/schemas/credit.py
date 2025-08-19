@@ -13,6 +13,7 @@ class CreditOfferStatus(StrEnum):
     offered = "Offered"
     accepted = "Accepted"
     rejected = "Rejected"
+    denied = "Denied"
 
 class CreditType(StrEnum):
     short_term = "Short term"

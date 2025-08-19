@@ -83,9 +83,9 @@ class DBCreditOffer(Base):
     )
     
     # Credit terms
-    credit_type: Mapped[str] = mapped_column(String(50), nullable=False)  # short_term, long_term, revolving
-    credit_limit: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
-    apr: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # Annual percentage rate
+    credit_type: Mapped[str] = mapped_column(String(50), nullable=True)  # short_term, long_term, revolving
+    credit_limit: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=True)
+    apr: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=True)  # Annual percentage rate
     
     # Offer lifecycle
     status: Mapped[str] = mapped_column(String(20), default="proposed", nullable=False)  # proposed, accepted, rejected, expired

@@ -6,7 +6,7 @@ from ecs.core.config import settings
 from ecs.models.schemas import Features
 
 if TYPE_CHECKING:
-    from ecs.models.domain import Transaction, EmotionalEvent
+    from ecs.models.domain import DBTransaction, DBEmotionalEvent
 
 class FeatureEngineeringService:
     def __init__(self) -> None:
@@ -23,7 +23,7 @@ class FeatureEngineeringService:
     def emotional_events_since(self) -> datetime:
         return datetime.now() - timedelta(days=self.emotional_events_period_days)
 
-    async def create_features(self, transactions: Sequence["Transaction"], emotional_events: Sequence["EmotionalEvent"]) -> Features:
+    async def create_features(self, transactions: Sequence["DBTransaction"], emotional_events: Sequence["DBEmotionalEvent"]) -> Features:
         """Create ML features from transactional and emotional data"""
         
         # Calculate transactional features
@@ -61,7 +61,7 @@ class FeatureEngineeringService:
             emotional_spending_correlation=emotional_spending_correlation
         )
     
-    def _calculate_average_daily_spend(self, transactions: Sequence["Transaction"]) -> float:
+    def _calculate_average_daily_spend(self, transactions: Sequence["DBTransaction"]) -> float:
         """Calculate average daily spending"""
         if not transactions:
             return 0.0
@@ -75,7 +75,7 @@ class FeatureEngineeringService:
         
         return statistics.mean(daily_spends.values()) if daily_spends else 0.0
     
-    def _calculate_average_daily_transactions(self, transactions: Sequence["Transaction"]) -> int:
+    def _calculate_average_daily_transactions(self, transactions: Sequence["DBTransaction"]) -> int:
         """Calculate average daily transaction count"""
         if not transactions:
             return 0
@@ -88,13 +88,13 @@ class FeatureEngineeringService:
         
         return round(statistics.mean(daily_counts.values())) if daily_counts else 0
     
-    def _calculate_max_single_transaction(self, transactions: Sequence["Transaction"]) -> float:
+    def _calculate_max_single_transaction(self, transactions: Sequence["DBTransaction"]) -> float:
         """Calculate maximum single transaction amount"""
         if not transactions:
             return 0.0
         return max(float(t.amount) for t in transactions)
     
-    def _calculate_income_volatility(self, transactions: Sequence["Transaction"]) -> float:
+    def _calculate_income_volatility(self, transactions: Sequence["DBTransaction"]) -> float:
         """Calculate income volatility based on transaction amounts"""
         if len(transactions) < 2:
             return 0.0
@@ -109,17 +109,17 @@ class FeatureEngineeringService:
         std_dev = statistics.stdev(amounts)
         return min(1.0, std_dev / mean_amount)
     
-    def _calculate_average_emotional_stability(self, emotional_events: Sequence["EmotionalEvent"]) -> float:
+    def _calculate_average_emotional_stability(self, emotional_events: Sequence["DBEmotionalEvent"]) -> float:
         """Calculate average emotional stability based on valence consistency"""
         if not emotional_events:
-            return 0.5  # Neutral stability
+            return 0  # Neutral stability
         
         # Use valence as a proxy for emotional stability
         # Higher valence = more positive emotions = more stable
         valences = [event.valence for event in emotional_events]
         return statistics.mean(valences)
     
-    def _calculate_stress_events_count(self, emotional_events: Sequence["EmotionalEvent"]) -> int:
+    def _calculate_stress_events_count(self, emotional_events: Sequence["DBEmotionalEvent"]) -> int:
         """Count stressful emotional events"""
         if not emotional_events:
             return 0
@@ -136,15 +136,15 @@ class FeatureEngineeringService:
         
         return stress_count
     
-    def _calculate_positive_emotion_ratio(self, emotional_events: Sequence["EmotionalEvent"]) -> float:
+    def _calculate_positive_emotion_ratio(self, emotional_events: Sequence["DBEmotionalEvent"]) -> float:
         """Calculate ratio of positive emotions"""
         if not emotional_events:
-            return 0.5  # Neutral ratio
+            return 0  # Neutral ratio
         
         positive_count = 0
         for event in emotional_events:
             # High valence indicates positive emotions
-            if event.valence > 0.6:
+            if event.valence > 0.35:
                 positive_count += 1
             # Specific positive emotions
             elif event.emotion_primary.lower() in ["joy", "happiness", "excitement", "contentment"]:
@@ -152,7 +152,7 @@ class FeatureEngineeringService:
         
         return positive_count / len(emotional_events)
     
-    def _calculate_emotional_volatility(self, emotional_events: Sequence["EmotionalEvent"]) -> float:
+    def _calculate_emotional_volatility(self, emotional_events: Sequence["DBEmotionalEvent"]) -> float:
         """Calculate emotional volatility based on valence changes"""
         if len(emotional_events) < 2:
             return 0.0
@@ -167,7 +167,7 @@ class FeatureEngineeringService:
         
         return statistics.mean(valence_changes) if valence_changes else 0.0
     
-    def _calculate_recent_emotional_trend(self, emotional_events: Sequence["EmotionalEvent"]) -> float:
+    def _calculate_recent_emotional_trend(self, emotional_events: Sequence["DBEmotionalEvent"]) -> float:
         """Calculate recent emotional trend (positive = improving, negative = declining)"""
         if len(emotional_events) < 2:
             return 0.0
@@ -185,7 +185,7 @@ class FeatureEngineeringService:
         # Return trend (-1 to 1)
         return max(-1.0, min(1.0, recent_avg_valence - older_avg_valence))
     
-    def _calculate_spending_pattern_change(self, transactions: Sequence["Transaction"]) -> float:
+    def _calculate_spending_pattern_change(self, transactions: Sequence["DBTransaction"]) -> float:
         """Calculate spending pattern change over time"""
         if len(transactions) < 4:
             return 0.0
@@ -207,7 +207,7 @@ class FeatureEngineeringService:
         change_ratio = (recent_avg_amount - older_avg_amount) / older_avg_amount
         return max(-1.0, min(1.0, change_ratio))
     
-    def _calculate_emotional_spending_correlation(self, transactions: Sequence["Transaction"], emotional_events: Sequence["EmotionalEvent"]) -> float:
+    def _calculate_emotional_spending_correlation(self, transactions: Sequence["DBTransaction"], emotional_events: Sequence["DBEmotionalEvent"]) -> float:
         """Calculate correlation between emotional state and spending patterns"""
         if not transactions or not emotional_events:
             return 0.0

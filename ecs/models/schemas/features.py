@@ -8,9 +8,9 @@ class Features(BaseModel):
     income_volatility: float = Field(ge=0, le=1, description="Income volatility (0=stable, 1=highly volatile)")
 
     # Emotional features
-    average_emotional_stability: float = Field(ge=0, le=1, description="Average emotional stability (0=unstable, 1=stable)")
+    average_emotional_stability: float = Field(ge=-1, le=1, description="Average emotional stability (-1=unstable, 0=neutral, 1=stable)")
     stress_events_count: int = Field(ge=0, description="Count of stressful events")
-    positive_emotion_ratio: float = Field(ge=0, le=1, description="Positive emotion ratio (0=all negative, 1=all positive)")
+    positive_emotion_ratio: float = Field(ge=-1, le=1, description="Positive emotion ratio (-1=all negative, 0=neutral, 1=all positive)")
     emotional_volatility: float = Field(ge=0, le=1, description="Emotional volatility (0=stable, 1=highly volatile)")
 
     # Time-weighted features
