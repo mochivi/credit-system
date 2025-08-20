@@ -4,7 +4,7 @@
 
 The Empathic Credit System is a revolutionary financial platform that leverages emotional data from users to offer personalized credit solutions. By analyzing emotional patterns alongside traditional financial data, ECS provides more empathic and tailored credit offers to customers.
 
-This system was built as part of CloudWalk's technical challenge to demonstrate integration of emotional data analytics with financial services in a secure, scalable architecture.
+This system was built to demonstrate integration of emotional data analytics with financial services in a secure, scalable architecture.
 
 ## System Architecture
 
